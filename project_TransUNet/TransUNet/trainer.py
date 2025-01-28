@@ -5,6 +5,7 @@ import random
 import sys
 import time
 import numpy as np
+import wandb
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -15,6 +16,16 @@ from tqdm import tqdm
 from utils import DiceLoss
 from torchvision import transforms
 
+### Uncomment the line below to initialize Wandb
+
+#wandb.init(project="project_name", entity="entity_name", group = 'training', name='name')
+
+def focal_loss(prediction, target, alpha=0.8, gamma=2):
+    bce_loss = nn.functional.binary_cross_entropy_with_logits(prediction, target, reduction='none')
+    pt = torch.exp(-bce_loss)
+    focal_loss = alpha * (1-pt) ** gamma * bce_loss
+    return focal_loss.mean()
+
 def trainer_synapse(args, model, snapshot_path):
     from datasets.dataset_synapse import Synapse_dataset, RandomGenerator
     logging.basicConfig(filename=snapshot_path + "/log.txt", level=logging.INFO,
@@ -22,7 +33,7 @@ def trainer_synapse(args, model, snapshot_path):
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logging.info(str(args))
     base_lr = args.base_lr
-    num_classes = args.num_classes
+    num_classes = 1
     batch_size = args.batch_size * args.n_gpu
     # max_iterations = args.max_iterations
     db_train = Synapse_dataset(base_dir=args.root_path, list_dir=args.list_dir, split="train",
@@ -33,12 +44,12 @@ def trainer_synapse(args, model, snapshot_path):
     def worker_init_fn(worker_id):
         random.seed(args.seed + worker_id)
 
-    trainloader = DataLoader(db_train, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True,
+    trainloader = DataLoader(db_train, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=8, pin_memory=True,
                              worker_init_fn=worker_init_fn)
     if args.n_gpu > 1:
         model = nn.DataParallel(model)
     model.train()
-    ce_loss = CrossEntropyLoss()
+    bce_loss = nn.BCELoss()
     dice_loss = DiceLoss(num_classes)
     optimizer = optim.SGD(model.parameters(), lr=base_lr, momentum=0.9, weight_decay=0.0001)
     writer = SummaryWriter(snapshot_path + '/log')
@@ -53,9 +64,9 @@ def trainer_synapse(args, model, snapshot_path):
             image_batch, label_batch = sampled_batch['image'], sampled_batch['label']
             image_batch, label_batch = image_batch.cuda(), label_batch.cuda()
             outputs = model(image_batch)
-            loss_ce = ce_loss(outputs, label_batch[:].long())
-            loss_dice = dice_loss(outputs, label_batch, softmax=True)
-            loss = 0.5 * loss_ce + 0.5 * loss_dice
+            loss_bce = bce_loss(torch.sigmoid(outputs), label_batch.float().unsqueeze(1))
+            loss_dice = dice_loss(torch.sigmoid(outputs), label_batch)
+            loss = 0.8 * loss_bce + 0.2 * loss_dice
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -66,16 +77,27 @@ def trainer_synapse(args, model, snapshot_path):
             iter_num = iter_num + 1
             writer.add_scalar('info/lr', lr_, iter_num)
             writer.add_scalar('info/total_loss', loss, iter_num)
-            writer.add_scalar('info/loss_ce', loss_ce, iter_num)
+            writer.add_scalar('info/loss_ce', loss_bce, iter_num)
 
-            logging.info('iteration %d : loss : %f, loss_ce: %f' % (iter_num, loss.item(), loss_ce.item()))
+            ### Wandb Logs
 
+            wandb.log({
+                'Total Loss': loss.item(),
+                'DICE Loss': loss_dice.item(),
+                'BCE Loss': loss_bce.item(),
+            })
+
+            ### Resume original code
+
+            #logging.info('iteration %d : loss : %f' % (iter_num, loss.item()))
+            logging.info('iteration %d : loss : %f, loss_ce: %f, loss_dice: %f' % (iter_num, loss.item(), loss_bce.item(), loss_dice.item()))
+            
             if iter_num % 20 == 0:
                 image = image_batch[1, 0:1, :, :]
                 image = (image - image.min()) / (image.max() - image.min())
                 writer.add_image('train/Image', image, iter_num)
-                outputs = torch.argmax(torch.softmax(outputs, dim=1), dim=1, keepdim=True)
-                writer.add_image('train/Prediction', outputs[1, ...] * 50, iter_num)
+                outputs = torch.sigmoid(outputs).detach()
+                writer.add_image('train/Prediction', outputs[1, 0, :, :].unsqueeze(0), iter_num)
                 labs = label_batch[1, ...].unsqueeze(0) * 50
                 writer.add_image('train/GroundTruth', labs, iter_num)
 
@@ -93,4 +115,7 @@ def trainer_synapse(args, model, snapshot_path):
             break
 
     writer.close()
+
+    wandb.finish()
+
     return "Training Finished!"

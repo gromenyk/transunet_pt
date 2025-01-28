@@ -4,29 +4,37 @@ import os
 import random
 import sys
 import numpy as np
+import wandb
+import io
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
+from PIL import Image
 from tqdm import tqdm
 from datasets.dataset_synapse import Synapse_dataset
 from utils import test_single_volume
 from networks.vit_seg_modeling import VisionTransformer as ViT_seg
 from networks.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
 
+# Uncomment the line below to initialize Wandb
+
+#wandb.init(project = 'project_name', group = 'testing', name = 'name', resume = 'allow')
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--volume_path', type=str,
-                    default='/content/extracted_files_transunet/project_TransUNet/data/Synapse/test_vol_h5', help='root dir for validation volume data')  # for acdc volume_path=root_dir
+                    default='../data/Synapse/test_vol_h5', help='root dir for validation volume data')  # for acdc volume_path=root_dir
 parser.add_argument('--dataset', type=str,
                     default='Synapse', help='experiment_name')
 parser.add_argument('--num_classes', type=int,
-                    default=4, help='output channel of network')
+                    default=1, help='output channel of network')
 parser.add_argument('--list_dir', type=str,
-                    default='/content/extracted_files_transunet/project_TransUNet/TransUNet/lists/lists_Synapse', help='list dir')
+                    default='./lists/lists_Synapse', help='list dir')
 
 parser.add_argument('--max_iterations', type=int,default=20000, help='maximum epoch number to train')
-parser.add_argument('--max_epochs', type=int, default=30, help='maximum epoch number to train')
-parser.add_argument('--batch_size', type=int, default=24,
+parser.add_argument('--max_epochs', type=int, default=10, help='maximum epoch number to train')
+parser.add_argument('--batch_size', type=int, default=12,
                     help='batch_size per gpu')
 parser.add_argument('--img_size', type=int, default=224, help='input patch size of network input')
 parser.add_argument('--is_savenii', action="store_true", help='whether to save results during inference')
@@ -34,9 +42,9 @@ parser.add_argument('--is_savenii', action="store_true", help='whether to save r
 parser.add_argument('--n_skip', type=int, default=3, help='using number of skip-connect, default is num')
 parser.add_argument('--vit_name', type=str, default='ViT-B_16', help='select one vit model')
 
-parser.add_argument('--test_save_dir', type=str, default='/content/extracted_files_transunet/predictions', help='saving prediction as nii!')
+parser.add_argument('--test_save_dir', type=str, default='./predictions', help='saving prediction as nii!')
 parser.add_argument('--deterministic', type=int,  default=1, help='whether use deterministic training')
-parser.add_argument('--base_lr', type=float,  default=0.01, help='segmentation network learning rate')
+parser.add_argument('--base_lr', type=float,  default=0.005, help='segmentation network learning rate')
 parser.add_argument('--seed', type=int, default=1234, help='random seed')
 parser.add_argument('--vit_patches_size', type=int, default=16, help='vit_patches_size, default is 16')
 args = parser.parse_args()
@@ -48,19 +56,46 @@ def inference(args, model, test_save_path=None):
     logging.info("{} test iterations per epoch".format(len(testloader)))
     model.eval()
     metric_list = 0.0
+
+    ### Addition: add folder to see predicted images
+
+    predictions_dir = './predicted_images'
+    os.makedirs(predictions_dir, exist_ok=True)
+
+    ### Resume original code
+
     for i_batch, sampled_batch in tqdm(enumerate(testloader)):
         h, w = sampled_batch["image"].size()[2:]
         image, label, case_name = sampled_batch["image"], sampled_batch["label"], sampled_batch['case_name'][0]
-        metric_i = test_single_volume(image, label, model, classes=args.num_classes, patch_size=[args.img_size, args.img_size],
-                                      test_save_path=test_save_path, case=case_name, z_spacing=args.z_spacing)
-        metric_list += np.array(metric_i)
-        logging.info('idx %d case %s mean_dice %f mean_hd95 %f' % (i_batch, case_name, np.mean(metric_i, axis=0)[0], np.mean(metric_i, axis=0)[1]))
-    metric_list = metric_list / len(db_test)
-    for i in range(1, args.num_classes):
-        logging.info('Mean class %d mean_dice %f mean_hd95 %f' % (i, metric_list[i-1][0], metric_list[i-1][1]))
-    performance = np.mean(metric_list, axis=0)[0]
-    mean_hd95 = np.mean(metric_list, axis=0)[1]
-    logging.info('Testing performance in best val model: mean_dice : %f mean_hd95 : %f' % (performance, mean_hd95))
+        with torch.no_grad():
+            output = model(image.cuda())
+            prediction = torch.sigmoid(output).squeeze(0).cpu().detach().numpy()
+
+        if test_save_path:
+            np.save(os.path.join(test_save_path, f"{case_name}_prediction.npy"), prediction)
+
+        ### Addition: save prediction as image and log it into Wandb
+
+        prediction_image_path = os.path.join(predictions_dir, f'{case_name}_prediction.png')
+        plt.imsave(prediction_image_path, prediction.squeeze(), cmap='hot')
+
+        fig, ax = plt.subplots()
+        ax.imshow(prediction.squeeze(), cmap='hot')
+        ax.set_title('Prediction')
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        plt.close(fig)
+
+        prediction_image = Image.open(buf)
+
+        wandb.log({
+            f'Image {case_name}': wandb.Image(image[0,0].cpu().numpy(), caption='Original Image'),
+            f'Prediction {case_name}': wandb.Image(prediction_image, caption='Prediction')            
+        })
+
+        ### Resume original code
+
     return "Testing Finished!"
 
 
@@ -80,9 +115,9 @@ if __name__ == "__main__":
     dataset_config = {
         'Synapse': {
             'Dataset': Synapse_dataset,
-            'volume_path': '/content/extracted_files_transunet/project_TransUNet/data/Synapse/test_vol_h5',
-            'list_dir': '/content/extracted_files_transunet/project_TransUNet/TransUNet/lists/lists_Synapse',
-            'num_classes': 9,
+            'volume_path': '../data/Synapse/test_vol_h5',
+            'list_dir': './lists/lists_Synapse',
+            'num_classes': 1,
             'z_spacing': 1,
         },
     }
@@ -96,7 +131,7 @@ if __name__ == "__main__":
 
     # name the same snapshot defined in train script!
     args.exp = 'TU_' + dataset_name + str(args.img_size)
-    snapshot_path = "/content/extracted_files_transunet/model/{}/{}".format(args.exp, 'TU')
+    snapshot_path = "../model/{}/{}".format(args.exp, 'TU')
     snapshot_path = snapshot_path + '_pretrain' if args.is_pretrain else snapshot_path
     snapshot_path += '_' + args.vit_name
     snapshot_path = snapshot_path + '_skip' + str(args.n_skip)
@@ -122,7 +157,7 @@ if __name__ == "__main__":
     net.load_state_dict(torch.load(snapshot))
     snapshot_name = snapshot_path.split('/')[-1]
 
-    log_folder = '/content/extracted_files_transunet/test_log/test_log_' + args.exp
+    log_folder = './test_log/test_log_' + args.exp
     os.makedirs(log_folder, exist_ok=True)
     logging.basicConfig(filename=log_folder + '/'+snapshot_name+".txt", level=logging.INFO, format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
@@ -130,11 +165,14 @@ if __name__ == "__main__":
     logging.info(snapshot_name)
 
     if args.is_savenii:
-        args.test_save_dir = '/conntent/extracted_files_transunet/predictions'
+        args.test_save_dir = './predictions'
         test_save_path = os.path.join(args.test_save_dir, args.exp, snapshot_name)
         os.makedirs(test_save_path, exist_ok=True)
     else:
         test_save_path = None
     inference(args, net, test_save_path)
+
+    wandb.finish()
+
 
 
