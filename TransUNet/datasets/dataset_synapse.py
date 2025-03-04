@@ -6,6 +6,7 @@ import torch
 from scipy import ndimage
 from scipy.ndimage.interpolation import zoom
 from torch.utils.data import Dataset
+from datasets.video_input import frame_split
 
 
 def random_rot_flip(image, label):
@@ -50,11 +51,16 @@ class RandomGenerator(object):
 
 
 class Synapse_dataset(Dataset):
-    def __init__(self, base_dir, list_dir, split, transform=None, val_ratio=0.2, seed=42):
+    def __init__(self, base_dir, list_dir, split, transform=None, val_ratio=0.2, seed=42, video_path=None):
         self.transform = transform  # using transform in torch!
         self.split = split
         #self.sample_list = open(os.path.join(list_dir, self.split+'.txt')).readlines()
         self.data_dir = base_dir
+        self.video_path = video_path
+
+        if self.video_path and not os.listdir(self.data_dir):
+            print(f'No .npz files found in {self.data_dir}. Processing video...')
+            frame_split(self.video_path, self.data_dir)
 
         all_samples = open(os.path.join(list_dir, "train.txt")).readlines()
         all_samples = [s.strip() for s in all_samples]
@@ -82,7 +88,15 @@ class Synapse_dataset(Dataset):
         slice_name = self.sample_list[idx].strip('\n')
         data_path = os.path.join(self.data_dir, slice_name+'.npz')
         data = np.load(data_path)
-        image, label, coords = data['image'], data['label'], data['insertion_coords']
+        image, label = data['image'], data['label']
+        
+        if self.split != 'test_vol':
+            coords = data['insertion_coords']
+
+        if image.ndim == 3:
+            image = np.mean(image, axis=2)
+
+        print(image.shape)
 
         x, y = image.shape
         if x != 224 or y != 224:
@@ -90,10 +104,12 @@ class Synapse_dataset(Dataset):
             label = zoom(label, (224 / x, 224 / y), order=0)
 
         image = np.expand_dims(image, axis=0)
-        image = np.repeat(image, 3, axis=0)
-    
+        image = np.repeat(image, 3, axis=0)    
 
-        sample = {'image': image, 'label': label, 'coords': coords} 
+        sample = {'image': image, 'label': label} 
+        if self.split != 'test_vol':
+            sample['coords'] = coords
+
         if self.transform:
             sample = self.transform(sample)
         sample['case_name'] = self.sample_list[idx].strip('\n')

@@ -12,6 +12,7 @@ npz_folder = '../data/Synapse/test_vol_h5'
 predicted_images_folder = './predicted_images'
 placed_centroids = './placed_center_of_mass'
 centroid_over_pred_image = './center_of_mass_over_pred_images'
+original_images_file = '../data/Synapse/original_images.npy'
 os.makedirs(placed_centroids, exist_ok=True)
 os.makedirs(centroid_over_pred_image, exist_ok=True)
 
@@ -42,6 +43,8 @@ def find_centers_of_mass_for_hottest_pixels(prediction):
 
     return left_center, right_center
 
+original_images = np.load(original_images_file)
+
 for npz_file in os.listdir(npz_folder):
     if npz_file.endswith('npz'):
         data = np.load(os.path.join(npz_folder, npz_file))
@@ -60,9 +63,13 @@ for npz_file in os.listdir(npz_folder):
     scaled_left = (int(left_center[0] * scale_y), int(left_center[1] * scale_x))
     scaled_right = (int(right_center[0] * scale_y), int(right_center[1] * scale_x))
 
+    frame_index = int(npz_file.split('_')[1].split('.')[0])
+
+    original_image = original_images[frame_index]
+
     # Imagen con centroides en la imagen original
     fig, ax = plt.subplots()
-    ax.imshow(image, cmap='gray')
+    ax.imshow(original_image, cmap='gray')
     ax.scatter(scaled_left[1], scaled_left[0], c='green', label='Left Center', s=20)
     ax.scatter(scaled_right[1], scaled_right[0], c='blue', label='Right Center', s=20)
     ax.set_title('Insertion Predictions')

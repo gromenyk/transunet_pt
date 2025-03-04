@@ -45,6 +45,7 @@ parser.add_argument('--deterministic', type=int,  default=1, help='whether use d
 parser.add_argument('--base_lr', type=float,  default=0.005, help='segmentation network learning rate')
 parser.add_argument('--seed', type=int, default=1234, help='random seed')
 parser.add_argument('--vit_patches_size', type=int, default=16, help='vit_patches_size, default is 16')
+parser.add_argument('--video_path', type=str, default='./datasets/videos/example_video.mp4', help='path to the input video')
 args = parser.parse_args()
 
 
@@ -77,8 +78,8 @@ def inference(args, model, test_save_path=None):
         prediction_image_path = os.path.join(predictions_dir, f'{case_name}_prediction.png')
         plt.imsave(prediction_image_path, prediction.squeeze(), cmap='hot')
 
-        raw_prediction_path = os.path.join(predictions_dir, f'{case_name}_prediction_raw.npy')
-        np.save(raw_prediction_path, prediction)  # Guarda la matriz original sin alteraciones
+        #raw_prediction_path = os.path.join(predictions_dir, f'{case_name}_prediction_raw.npy')
+        #np.save(raw_prediction_path, prediction)  # Guarda la matriz original sin alteraciones
 
         fig, ax = plt.subplots()
         ax.imshow(prediction.squeeze(), cmap='hot')
