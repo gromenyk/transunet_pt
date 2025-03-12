@@ -10,6 +10,10 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import matplotlib.pyplot as plt
+from pipeline.video_input import frame_split
+from pipeline.list_generator import npz_files_list
+from pipeline.center_of_mass import place_centroids
+from pipeline.video_reconstruction import reconstruct_video
 from torch.utils.data import DataLoader
 from PIL import Image
 from tqdm import tqdm
@@ -46,8 +50,32 @@ parser.add_argument('--base_lr', type=float,  default=0.005, help='segmentation 
 parser.add_argument('--seed', type=int, default=1234, help='random seed')
 parser.add_argument('--vit_patches_size', type=int, default=16, help='vit_patches_size, default is 16')
 parser.add_argument('--video_path', type=str, default='./datasets/videos/example_video.mp4', help='path to the input video')
+parser.add_argument('--original_images', type=str, default='../data/Synapse/original_images.npy', help='path to saved original images')
+parser.add_argument('--npz_files', type=str, default='../data/Synapse/test_vol_h5', help='Path to the NPZ files folder')
+parser.add_argument('--output_txt_file', type=str, default='./lists/lists_Synapse/test_vol.txt', help='Output folder for the txt file')
+parser.add_argument('--predictions_dir', type=str, default='./outputs/predicted_images', help='Predicted images folder')
+parser.add_argument('--original_images_file', type=str, default='../data/Synapse/original_images.npy', help='path to the original images numpy file')
+parser.add_argument('--placed_centroids_folder', type=str, default='./outputs/placed_center_of_mass', help='placed centroids folder')
+parser.add_argument('--output_video_file', type=str, default='./outputs/reconstructed_video.mp4', help='folder for the output video with insertions')
 args = parser.parse_args()
 
+print('Video pre-processing...')
+
+try:
+    frame_split(args.video_path, args.volume_path, args.original_images)
+    print('Video pre-processing finished')
+except Exception as e:
+    print(f'Error encountered during video pre-processing: {e}')
+    exit(1)
+
+print('Generating NPZ file list')
+
+try:
+    npz_files_list(args.npz_files, args.output_txt_file)
+    print ('NPZ files list generated in {output_txt_file}')
+except Exception as e:
+    print(f'Coudl not generate the NPZ list: {e}')
+    exit(1)
 
 def inference(args, model, test_save_path=None):
     db_test = args.Dataset(base_dir=args.volume_path, split="test_vol", list_dir=args.list_dir)
@@ -56,12 +84,12 @@ def inference(args, model, test_save_path=None):
     model.eval()
     metric_list = 0.0
 
-    ### GR: save predictions to folder
+    # Save predictions to folder
 
-    predictions_dir = './predicted_images'
+    predictions_dir = './outputs/predicted_images'
     os.makedirs(predictions_dir, exist_ok=True)
 
-    ### Resume original code
+    # Resume original code
 
     for i_batch, sampled_batch in tqdm(enumerate(testloader)):
         h, w = sampled_batch["image"].size()[2:]
@@ -73,13 +101,8 @@ def inference(args, model, test_save_path=None):
         if test_save_path:
             np.save(os.path.join(test_save_path, f"{case_name}_prediction.npy"), prediction)
 
-        ### GR: save prediction as image
-
         prediction_image_path = os.path.join(predictions_dir, f'{case_name}_prediction.png')
         plt.imsave(prediction_image_path, prediction.squeeze(), cmap='hot')
-
-        #raw_prediction_path = os.path.join(predictions_dir, f'{case_name}_prediction_raw.npy')
-        #np.save(raw_prediction_path, prediction)  # Guarda la matriz original sin alteraciones
 
         fig, ax = plt.subplots()
         ax.imshow(prediction.squeeze(), cmap='hot')
@@ -97,7 +120,6 @@ def inference(args, model, test_save_path=None):
         })
 
     return "Testing Finished!"
-
 
 if __name__ == "__main__":
 
@@ -159,20 +181,6 @@ if __name__ == "__main__":
     
     checkpoint = torch.load(snapshot)
 
-    # Aplicar los pesos al modelo permitiendo diferencias en las claves
-    missing_keys, unexpected_keys = net.load_state_dict(checkpoint, strict=False)
-
-    # Registrar las claves que no se pudieron cargar
-    print("\n--- Claves no encontradas en el checkpoint (no se cargaron) ---")
-    for key in missing_keys:
-        print(key)
-
-    print("\n--- Claves inesperadas en el checkpoint (no esperadas en el modelo) ---")
-    for key in unexpected_keys:
-        print(key)
-
-    
-
     snapshot_name = snapshot_path.split('/')[-1]
 
     log_folder = './test_log/test_log_' + args.exp
@@ -192,4 +200,10 @@ if __name__ == "__main__":
 
     wandb.finish()
 
+print('Plotting insertion coordinates over original images...')
+place_centroids(args.npz_files, args.predictions_dir, args.original_images_file, args.placed_centroids_folder)
+print('Plotting finished')
 
+print('Building video with predictions')
+reconstruct_video(args.placed_centroids_folder, args.output_video_file)
+print('Video reconstruction finished')

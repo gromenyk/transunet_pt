@@ -1,9 +1,10 @@
 import cv2
 import os
 import numpy as np
+import argparse
 
 video_path = './datasets/videos/example_video.mp4'
-output_folder = '../data/Synapse/test_vol_h5'
+output_folder = './data/Synapse/test_vol_h5'
 original_images_file = '../data/Synapse/original_images.npy'
 
 cap = cv2.VideoCapture(video_path)
@@ -65,9 +66,3 @@ def frame_split(video_path, output_folder, original_images_file):
     np.save(original_images_file, np.array(original_images))
 
     print(f'Extraction Completed. {frame_count} frames and masks were generated')
-
-
-frame_split(video_path, output_folder, original_images_file)
-
-
-

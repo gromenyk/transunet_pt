@@ -6,7 +6,7 @@ import torch
 from scipy import ndimage
 from scipy.ndimage.interpolation import zoom
 from torch.utils.data import Dataset
-from datasets.video_input import frame_split
+from pipeline.video_input import frame_split
 
 
 def random_rot_flip(image, label):
