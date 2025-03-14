@@ -66,7 +66,6 @@ def frame_split(video_path, output_folder, original_images_file):
     np.save(original_images_file, np.array(original_images))
 
     print(f'Extraction Completed. {frame_count} frames and masks were generated')
-<<<<<<< HEAD
 
 '''
 def main():
@@ -85,5 +84,3 @@ if __name__ == "__main__":
 
 
 
-=======
->>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660

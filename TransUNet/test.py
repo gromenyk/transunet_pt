@@ -84,20 +84,12 @@ def inference(args, model, test_save_path=None):
     model.eval()
     metric_list = 0.0
 
-<<<<<<< HEAD
     ### GR: save predictions to folder
-=======
-    # Save predictions to folder
->>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660
 
     predictions_dir = './outputs/predicted_images'
     os.makedirs(predictions_dir, exist_ok=True)
 
-<<<<<<< HEAD
     ### Resume original code
-=======
-    # Resume original code
->>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660
 
     for i_batch, sampled_batch in tqdm(enumerate(testloader)):
         h, w = sampled_batch["image"].size()[2:]
@@ -109,7 +101,6 @@ def inference(args, model, test_save_path=None):
         if test_save_path:
             np.save(os.path.join(test_save_path, f"{case_name}_prediction.npy"), prediction)
 
-<<<<<<< HEAD
         ### GR: save prediction as image
 
         prediction_image_path = os.path.join(predictions_dir, f'{case_name}_prediction.png')
@@ -118,11 +109,6 @@ def inference(args, model, test_save_path=None):
         #raw_prediction_path = os.path.join(predictions_dir, f'{case_name}_prediction_raw.npy')
         #np.save(raw_prediction_path, prediction)  # Guarda la matriz original sin alteraciones
 
-=======
-        prediction_image_path = os.path.join(predictions_dir, f'{case_name}_prediction.png')
-        plt.imsave(prediction_image_path, prediction.squeeze(), cmap='hot')
-
->>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660
         fig, ax = plt.subplots()
         ax.imshow(prediction.squeeze(), cmap='hot')
         ax.set_title('Prediction')
@@ -200,7 +186,6 @@ if __name__ == "__main__":
     
     checkpoint = torch.load(snapshot)
 
-<<<<<<< HEAD
     # Aplicar los pesos al modelo permitiendo diferencias en las claves
     missing_keys, unexpected_keys = net.load_state_dict(checkpoint, strict=False)
 
@@ -213,8 +198,6 @@ if __name__ == "__main__":
     for key in unexpected_keys:
         print(key)
 
-=======
->>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660
     snapshot_name = snapshot_path.split('/')[-1]
 
     log_folder = './test_log/test_log_' + args.exp
