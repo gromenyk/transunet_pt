@@ -1,0 +1,8 @@
+[11:37:27.937] Namespace(base_lr=0.0005, batch_size=12, dataset='Synapse', deterministic=1, exp='TU_Synapse224', img_size=224, is_pretrain=False, list_dir='./lists/lists_Synapse', max_epochs=5, max_iterations=30000, n_gpu=1, n_skip=3, num_classes=1, root_path='../data/Synapse/train_npz', seed=1234, vit_name='R50-ViT-B_16', vit_patches_size=16)
+[11:37:28.043] 1194 iterations per epoch. 5970 max iterations 
+[11:46:30.997] iteration 1194 : loss : 0.630587, loss_bce: 0.546352, loss_dice: 0.967527
+[11:54:36.396] iteration 2388 : loss : 0.623547, loss_bce: 0.537546, loss_dice: 0.967553
+[12:02:44.875] iteration 3582 : loss : 0.623304, loss_bce: 0.537237, loss_dice: 0.967571
+[12:12:04.118] iteration 4776 : loss : 0.623791, loss_bce: 0.537841, loss_dice: 0.967590
+[12:20:46.060] iteration 5970 : loss : 0.622117, loss_bce: 0.535743, loss_dice: 0.967613
+[12:20:48.765] save model to ../model/TU_Synapse224/TU_R50-ViT-B_16_skip3_epo5_bs12_lr0.0005_224/epoch_4.pth

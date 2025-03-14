@@ -1,0 +1,6 @@
+transunet_pt/data/Synapse/test_vol_h5/*.npz
+transunet_pt/data/Synapse/train_npz/*.npz
+transunet_pt/model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz
+transunet_pt/model/TU_Synapse224/TU_pretrain_R50-ViT-B_16_skip3_epo5_bs12_lr0.005_224/epoch_4.pth
+transunet_pt/model/TU_Synapse224/TU_pretrain_R50-ViT-B_16_skip3_epo5_bs12_lr0.005_224/log
+transunet_pt/model/TU_Synapse224/TU_pretrain_R50-ViT-B_16_skip3_epo5_bs12_lr0.005_224/log.txt
