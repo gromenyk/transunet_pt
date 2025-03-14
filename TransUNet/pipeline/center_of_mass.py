@@ -15,7 +15,10 @@ os.makedirs(CENTROID_OVER_PRED_IMAGE, exist_ok=True)
 
 def find_centers_of_mass_for_hottest_pixels(prediction):
     """Encuentra los centros de masa en las mitades izquierda y derecha de la imagen de predicción."""
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660
     h, w = prediction.shape
     mid = w // 2
 
@@ -36,6 +39,7 @@ def find_centers_of_mass_for_hottest_pixels(prediction):
 
     return left_center, right_center
 
+<<<<<<< HEAD
 def hampel_filter(data, window_size=5, threshold=3):
     """Aplica el filtro Hampel para detectar y reemplazar outliers"""
     filtered_data = data.copy()
@@ -62,6 +66,8 @@ def smooth_coordinates_hampel(center_list, window_size=5, threshold=3):
         smoothed_list.append((smoothed_x, smoothed_y))
     
     return smoothed_list
+=======
+>>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660
 
 def place_centroids(npz_files, predictions_dir, original_images_file, placed_centroids_folder):
     """Procesa los archivos NPZ y genera imágenes con los centroides marcados."""
@@ -75,9 +81,12 @@ def place_centroids(npz_files, predictions_dir, original_images_file, placed_cen
 
     os.makedirs(placed_centroids_folder, exist_ok=True)
 
+<<<<<<< HEAD
     left_center_list = []
     right_center_list = []
 
+=======
+>>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660
     for npz_file in os.listdir(npz_files):
         if not npz_file.endswith('.npz'):
             continue
@@ -98,9 +107,12 @@ def place_centroids(npz_files, predictions_dir, original_images_file, placed_cen
         scaled_left = (int(left_center[0] * SCALE_Y), int(left_center[1] * SCALE_X))
         scaled_right = (int(right_center[0] * SCALE_Y), int(right_center[1] * SCALE_X))
 
+<<<<<<< HEAD
         left_center_list.append(scaled_left)
         right_center_list.append(scaled_right)
 
+=======
+>>>>>>> 8bc6478ba1218d921f1cc62a178e9aaa5309c660
         frame_index = int(npz_file.split('_')[1].split('.')[0])
         original_image = original_images[frame_index]
 
