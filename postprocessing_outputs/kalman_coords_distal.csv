@@ -1,0 +1,2 @@
+npz_file,left_x,left_y,right_x,right_y,distances_distal_x,distances_distal_y,distal_distance,speed_distal_x,speed_distal_y,distal_acceleration,distances_proximal_x,distances_proximal_y,proximal_distance,speed_proximal_x,speed_proximal_y,proximal_acceleration,Kalman_Predicted_Distal_X,Kalman_Predicted_Distal_Y
+,,,,,0,0,0,0,0,0,0,0,0,0,0,0,,

@@ -1,0 +1,169 @@
+preprocessing:
+  enabled: true
+
+  video_cropping_batch:
+    enabled: false
+    input_dir: data_preprocessing_pipeline/raw_data/
+    output_dir: data_preprocessing_pipeline/temp/videos_resized/
+    json_dir: data_preprocessing_pipeline/temp/videos_resized/data_transformation/
+    save_video: true
+    save_json: False
+    resolution: [508, 632]  
+
+  extract_frames_batch:
+    enabled: true
+    input_dir: data_preprocessing_pipeline/raw_data/
+    output_dir: data_preprocessing_pipeline/temp/frames_output/
+
+  resize_frames:
+    enabled: true
+    input_dir: data_preprocessing_pipeline/temp/frames_output/
+    output_dir: data_preprocessing_pipeline/temp/frames_resized/
+    target_size: [512, 512]  
+
+  labelbox_conversion:
+    enabled: true
+    ndjson_path: data_preprocessing_pipeline/raw_data/
+    output_json_path: data_preprocessing_pipeline/raw_data/labeled_coords.json
+
+  coordinate_extraction:
+    enabled: true
+    input_json: data_preprocessing_pipeline/raw_data/labeled_coords.json
+    output_csv: data_preprocessing_pipeline/temp/labeled_coords.csv
+
+  scale_coordinates:
+    enabled: true
+    input_csv: data_preprocessing_pipeline/temp/labeled_coords.csv
+    output_csv: data_preprocessing_pipeline/temp/labeled_coords_scaled.csv
+    original_size: [632, 508]
+    target_size: [512, 512]
+
+  generate_masks:
+    enabled: true
+    input_csv: data_preprocessing_pipeline/temp/labeled_coords_scaled.csv
+    output_dir: data_preprocessing_pipeline/temp/masks_512x512
+    frames_dir: data_preprocessing_pipeline/temp/frames_resized
+    target_size: 512
+    radius: 30
+
+  generate_npz:
+    enabled: true
+    input_csv: data_preprocessing_pipeline/temp/labeled_coords_scaled.csv
+    frames_folder: data_preprocessing_pipeline/temp/frames_resized
+    masks_folder: data_preprocessing_pipeline/temp/masks_512x512
+    output_train_folder: includes/data/Synapse/train_npz
+    output_test_folder: includes/data/Synapse/test_vol_h5
+    num_test_videos: 1
+
+  generate_npz_list:
+    enabled: true
+    train_npz_folder: includes/data/Synapse/train_npz
+    test_npz_folder: includes/data/Synapse/test_vol_h5
+    train_list_output_folder: includes/TransUNet/lists/lists_Synapse
+    test_list_output_folder: includes/TransUNet/lists/lists_Synapse
+    train_txt_output: train.txt
+    test_txt_output: test_vol.txt
+
+  cleanup:
+    enabled: false
+    temp_folder: data_preprocessing_pipeline/temp
+
+training:
+  enabled: true
+  root_path: "includes/data/Synapse/train_npz"
+  list_dir: "includes/TransUNet/lists/lists_Synapse"
+  dataset: "Synapse"
+  num_classes: 1
+  max_iterations: 30000
+  max_epochs: 5
+  batch_size: 12
+  n_gpu: 1
+  deterministic: true
+  base_lr: 0.005
+  img_size: 224
+  seed: 1234
+  n_skip: 3
+  vit_name: "R50-ViT-B_16"
+  vit_patches_size: 16
+  pretrained_path: "includes/model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz"
+
+testing:
+  enabled: true
+  dataset: "Synapse"
+  root_path: "includes/data/Synapse/test_vol_h5"
+  list_dir: "includes/TransUNet/lists/lists_Synapse"
+  num_classes: 1
+  max_iterations: 30000
+  max_epochs: 5
+  batch_size: 12
+  img_size: 224
+  n_skip: 3
+  vit_name: "R50-ViT-B_16"
+  vit_patches_size: 16
+  deterministic: true
+  base_lr: 0.005
+  seed: 1234
+  is_savenii: false
+  test_save_dir: "./testing_outputsresults_temp"
+  snapshot_path: includes/model/TU_Synapse224/TU_R50-ViT-B_16_skip3_epo5_bs12_lr0.005_224/epoch_4.pth
+
+post_processing:
+  enabled: true
+
+  find_center_of_mass:
+    enabled: true
+    npz_folder: includes/data/Synapse/test_vol_h5
+    predicted_images_folder: predicted_images
+    placed_centroids: postprocessing_outputs/centroids_on_original_frames
+    centroid_over_pred_image: postprocessing_outputs/centroids_on_prediction
+    csv_output_path: postprocessing_outputs/predicted_coords.csv
+    original_size: [512, 512]
+    prediction_size: [224, 224]
+
+  calculate_prediction_errors:
+    enabled: true
+    npz_folder: includes/data/Synapse/test_vol_h5
+    predicted_images_folder: predicted_images
+    visualizations_folder: postprocessing_outputs/visualizations
+    csv_output_path: postprocessing_outputs/errors.csv
+    original_size: [512, 512]        
+    prediction_size: [224, 224]
+
+  calculate_acceleration:
+    enabled: true
+    input_csv_path: postprocessing_outputs/predicted_coords.csv
+    output_csv_path: postprocessing_outputs/accelerations.csv
+    frame_rate: 51 
+
+  kalman_filter_distal:
+    enabled: true
+    input_csv_path: postprocessing_outputs/accelerations.csv
+    output_csv_path: postprocessing_outputs/kalman_coords_distal.csv
+    output_plot_path: postprocessing_outputs/kalman_plot_distal.png
+    threshold_acceleration: 0
+    frame_rate: 51
+
+  kalman_filter_proximal:
+    enabled: true
+    input_csv_path: postprocessing_outputs/accelerations.csv
+    output_csv_path: postprocessing_outputs/kalman_coords_proximal.csv
+    output_plot_path: postprocessing_outputs/kalman_plot_proximal.png
+    threshold_acceleration: 0
+    frame_rate: 51
+
+  reconstruct_video:
+    enabled: true
+    frames_folder: postprocessing_outputs/centroids_on_original_frames
+    output_video_file: postprocessing_outputs/reconstructed_video.mp4
+    frame_rate: 51
+
+  cleanup_pipeline:
+    enabled: false #Keep this as false to avoid accidental deletion
+    folders:
+      - postprocessing_outputs
+    npz_patterns:
+      - data/Synapse/train_npz/*.npz
+      - data/Synapse/test_vol_h5/*.npz
+    file_patterns:
+      - TransUNet/lists/lists_Synapse/train.txt
+      - TransUNet/lists/lists_Synapse/test_vol.txt

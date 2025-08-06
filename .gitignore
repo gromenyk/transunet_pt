@@ -1,3 +1,6 @@
 project_TransUNet/data/Synapse/test_vol_h5/*.npz
 project_TransUNet/data/Synapse/train_npz/*.npz
 project_TransUNet/model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz
+project_TransUNet/runs
+project_TransUNet/data_preprocessing_pipeline/raw_data
+includes/model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz

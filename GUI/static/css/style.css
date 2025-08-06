@@ -1,0 +1,355 @@
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h1 {
+    font-family: "Helvetica", "Arial", sans-serif;
+    color:#2D373C;
+}
+
+h2 {
+    font-family: "Helvetica", "Arial", sans-serif;
+    color: #2D373C;
+    font-size: 40px;
+    text-align: center; /* Centra el texto dentro de cada columna */
+    margin-top: 20px;
+}
+
+p {
+    color:#2D373C;
+}
+
+.main {
+    display: flex;
+    flex-direction: row; /* Coloca las columnas una al lado de la otra */
+    justify-content: space-between; /* Asegura que las columnas estén separadas */
+    align-items: flex-start; /* Alinea las columnas al principio (parte superior) */
+    width: 100%; /* Asegura que ocupe todo el ancho */
+}
+
+.banner {
+    background-color: #A5D7D2;
+    color: black;
+    text-align: center;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.col_left, .col_right {
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start; 
+    align-items: center; 
+    width: 50%; 
+    padding: 20px;
+    font-family: "Helvetica", "Arial", sans-serif;
+}
+
+.col_right {
+    border-left: black solid 2px; 
+}
+
+/* Menu */
+menu {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    list-style-type: none;
+    gap: 50px;
+    background-color: #46505A;
+    color: white;
+    font-size: 20px;
+    height: 50px;
+    margin-top: 0px;
+}
+
+menu a {
+    text-decoration: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+menu li {
+    list-style-type: none;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    cursor: pointer;
+}
+
+/* Estilo para la pestaña activa */
+menu li.active a {
+    color: #A5D7D2; /* Cambia el color de la pestaña activa */
+    font-weight: bold; /* O cualquier estilo que prefieras */
+    border-bottom: 3px solid #A5D7D2; /* Puedes añadir una línea o border debajo */
+}
+
+
+/* Video Uploading */
+.video_upload {
+    color: #2D373C;
+    background-color:#D2EBE9;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 70%;
+    margin-bottom: 30px;
+}
+
+.custom-file-upload {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color:#A5D7D2;
+    color: #46505A;
+    font-size: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.custom-file-upload:hover {
+    color:white;
+    background-color: #46505A;
+}
+
+.video_upload label[for="video"] {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 20px;
+    margin-top: 20px;
+    border: solid 1px #46505A
+}
+
+.video_upload input[type="file"] {
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.video_upload input[type="submit"] {
+    padding: 5px 20px;
+    background-color: #A5D7D2;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #46505A;
+    border: None;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    border: solid 1px #46505A
+}
+
+.video_upload input[type="submit"]:hover {
+    background-color: #46505A;
+    color: white;
+}
+
+.file-name {
+    margin-top: 10px;
+    display: block;
+    font-style: italic;
+}
+
+.upload-message {
+    color: #46505A;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 0px 20px;
+}
+
+/* Run Inference form and buttons */
+
+#run-inference-form {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+#start-inference-button {
+    background-color: #A5D7D2;
+    color: #46505A;
+    border: solid 1px #46505A;
+    font-size: 20px; 
+    border-radius: 5px;
+    padding: 5px 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#start-inference-button:hover {
+    background-color: #46505A;
+    color: white;
+}
+
+#stop-inference-button:hover {
+    background-color: #46505A;
+    color: white;
+}
+
+#stop-inference-button {
+    background-color: #A5D7D2;
+    color: #46505A;
+    border: solid 1px #46505A;
+    font-size: 20px; 
+    border-radius: 5px;
+    padding: 5px 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Inference section */
+
+.inference {
+    background-color: #D2EBE9;
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+}
+
+#run-inference-form {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+#stop-inference-form {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Progress Bar */
+
+.progress-bar {
+    width: 84.5%;
+    background-color: #D2EBE9;
+    border-radius: 5px;
+    border: solid 1px #46505A;
+    overflow: hidden;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+#progress-bar-fill {
+    color:white;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 30px;  /* Asegura que el texto se mantenga verticalmente centrado en la barra */
+    width: 0%;  /* Comienza con 0% de ancho */
+    background-color: #46505A;  /* El color de fondo del texto */
+    transition: None;
+}
+
+.progress-bar div {
+    height: 30px;
+    background-color: #A5D7D2;
+    width: 0%;  /* Esta es la que se va actualizando */
+}
+
+#progress-time {
+    margin-bottom: 20px;
+}
+
+.progress-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#progress-dropdown {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 16px;
+    padding: 10px;
+    background-color: #2D373C;
+    color: white;
+    border: solid 1px #2D373C;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Visualizations section */
+
+#waiting-video-message {
+    color: #2D373C;
+    font-size: 20px;
+    font-style: italic;
+}
+
+.frames-container {
+    display: flex;
+    flex-direction: column;
+}
+
+#frameSlider {
+    width: 100%;
+    background-color: #A5D7D2;
+    border: solid 1px #2D373C;
+    border-radius: 6px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    height: 20px;
+}
+
+.video-btns {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+}
+
+#play-btn {
+    background-color: #A5D7D2;
+    color: #46505A;
+    border: solid 1px #46505A;
+    font-size: 20px; 
+    border-radius: 5px;
+    padding: 5px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 50%;
+}
+
+#pause-btn {
+    background-color: #A5D7D2;
+    color: #46505A;
+    border: solid 1px #46505A;
+    font-size: 20px; 
+    border-radius: 5px;
+    padding: 5px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 50%;
+}
