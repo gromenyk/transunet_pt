@@ -1,0 +1,148 @@
+pipeline:
+  enabled: true
+
+  crop_videos:
+    enabled: true   
+    final_width: 508
+    final_height: 632
+
+  extract_frames:
+    enabled: true
+
+  resize_frames:
+    enabled: true
+    target_width: 512
+    target_height: 512
+
+  load_ndjson:
+    enabled: true
+    path: "data_preprocessing_pipeline/raw_data/annotations.ndjson"
+
+  extract_coords:
+    enabled: true
+
+  scale_coords:
+    enabled: true
+    input_size: [632, 508]     
+    target_size: [512, 512]    
+
+  generate_masks:
+    enabled: true
+    radius: 30
+
+  generate_npz:
+    enabled: true
+    save: true
+    output_train_dir: "includes/data/Synapse/train_npz/"
+    output_test_dir: "includes/data/Synapse/test_vol_h5/"
+
+  generate_npz_lists:
+    enabled: true
+    train_npz_folder: "includes/data/Synapse/train_npz/"
+    test_npz_folder: "includes/data/Synapse/test_vol_h5/"
+    train_list_output_folder: "includes/TransUNet/lists/lists_Synapse/"
+    test_list_output_folder: "includes/TransUNet/lists/lists_Synapse/"
+    train_txt_output: "train.txt"
+    test_txt_output: "test_vol.txt"
+
+debug:
+  enabled: true
+  dir: "debug/"
+  save_sample_frame: true
+
+training:
+  enabled: true
+  root_path: "includes/data/Synapse/train_npz"
+  list_dir: "includes/TransUNet/lists/lists_Synapse"
+  dataset: "Synapse"
+  num_classes: 1
+  max_iterations: 30000
+  max_epochs: 5
+  batch_size: 12
+  n_gpu: 1
+  deterministic: true
+  base_lr: 0.005
+  img_size: 224
+  seed: 1234
+  n_skip: 3
+  vit_name: "R50-ViT-B_16"
+  vit_patches_size: 16
+  pretrained_path: "includes/model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz"
+
+testing:
+  enabled: true
+  root_path: "includes/data/Synapse/test_vol_h5"
+  list_dir: "includes/TransUNet/lists/lists_Synapse"
+  dataset: "Synapse"
+  batch_size: 12
+  img_size: 224
+  vit_name: "R50-ViT-B_16"
+  deterministic: false
+  seed: 1234
+  num_classes: 1
+  n_skip: 3
+  vit_patches_size: 16
+  max_iterations: 20000
+  max_epochs: 5
+  base_lr: 0.05
+  pretrained_model_path: "model/TU_Synapse224/TU_R50-ViT-B_16_epo5_bs12/model.pth"
+  save_debug: true
+  debug_dir: "debug/testing/"
+
+post_processing:
+  enabled: true
+
+  load_ndjson:
+    path: "data_preprocessing_pipeline/raw_data/annotations.ndjson"
+
+  find_centroids:
+    enabled: true
+    save_debug: true
+    debug_dir: "debug/testing/centroides"
+    debug_sample_key: null
+
+  scale_predicted_coords:
+    enabled: true
+    target_size: [632, 508]
+
+  debug_overlay:
+    enabled: true
+    test_videos_dir: data_preprocessing_pipeline/raw_data/test_videos
+    output_dir: debug/overlays
+    ndjson_path: data_preprocessing_pipeline/raw_data/annotations.ndjson
+    frames_to_debug: [0]  
+
+  calculate_errors:
+    enabled: true
+    ndjson_path: "data_preprocessing_pipeline/raw_data/annotations.ndjson"
+    save_csv: true
+    csv_path: "results/errors.csv"
+
+  calculate_accelerations:
+    enabled: true
+    frame_rate: 51
+    save_csv: true
+    csv_path: "results/accelerations.csv"
+
+  kalman_filter_distal:
+    enabled: true
+    threshold_acceleration: 0
+    frame_rate: 51
+    save_csv: true
+    output_csv_path: results/kalman_distal.csv
+    save_plot: true
+    output_plot_path: results/kalman_distal_plot.png
+
+  kalman_filter_proximal:
+    enabled: true
+    threshold_acceleration: 0
+    frame_rate: 51
+    save_csv: true
+    output_csv_path: results/kalman_proximal.csv
+    save_plot: true
+    output_plot_path: results/kalman_proximal_plot.png
+
+  reconstruct_video:
+    enabled: true
+    output_dir: results/overlay_videos
+    frame_rate: 51

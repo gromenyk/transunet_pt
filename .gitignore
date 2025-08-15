@@ -1,0 +1,8 @@
+data/Synapse/test_vol_h5/*.npz
+data/Synapse/train_npz/*.npz
+data_preprocessing_pipeline/raw_data/test_videos/*
+data_preprocessing_pipeline/raw_data/train_videos/*
+data_preprocessing_pipeline/raw_data/*.ndjson
+includes/model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz
+runs
+includes/model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz

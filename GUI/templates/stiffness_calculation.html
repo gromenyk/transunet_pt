@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepPatella</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="banner">
+        <h1>DeepPatella</h1>
+        <p>Automatic quantification of patellar tendon stiffness</p>
+    </div>
+    <menu>
+        <li><a href="{{ url_for('home') }}">Configurations & Visualizations</a></li>
+        <li><a href="{{ url_for('baseline_calculation') }}">Baseline Calculation</a></li>
+        <li><a href="{{ url_for('stiffness_calculation') }}">Tendon Stiffness Calculation</a></li>
+    </menu>        
+    <H1>STIFFNESS CALCULATION</H1>
+</body>
+</html>
